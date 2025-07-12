@@ -1,0 +1,119 @@
+########################################
+# Build output directories
+########################################
+build/
+out/
+bin/
+obj/
+
+########################################
+# Visual Studio 2022 generated files
+########################################
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+.vs/
+CMakeSettings.json
+*.tlog
+*.suo
+*.sdf
+*.opensdf
+*.pdb
+*.ilk
+*.idb
+
+########################################
+# CMake generated files
+########################################
+CMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+install_manifest.txt
+
+# Ignore auto-generated CMake scripts, but allow custom ones
+*.cmake
+!CMakeLists.txt
+!cmake/*.cmake
+
+########################################
+# Compiled binaries and libraries
+########################################
+*.exe
+*.dll
+*.lib
+*.a
+*.o
+*.obj
+*.so
+*.dylib
+
+########################################
+# IDEs and editor config
+########################################
+.vscode/
+.idea/
+*.code-workspace
+
+########################################
+# External libraries (optional if not using git submodules)
+########################################
+external/*
+!external/*/README.md
+!external/*/LICENSE
+!external/*/CMakeLists.txt
+!external/*/include/
+!external/*/src/
+
+# vcpkg specific exceptions
+external/vcpkg/*
+!external/vcpkg/.git
+!external/vcpkg/vcpkg.json
+
+########################################
+# Benchmarking and test output files
+########################################
+docs/results/
+tests/results/
+# Only ignore data outputs; allow source/test data
+docs/results/*.txt
+tests/results/*.json
+tests/results/*.csv
+
+########################################
+# Logs, temp, and backup files
+########################################
+*.log
+*.tmp
+*.bak
+*.swp
+*.cache
+*~
+
+########################################
+# Python cache
+########################################
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+pip-selfcheck.json
+
+########################################
+# Ninja build system (if using)
+########################################
+build.ninja
+.ninja_deps
+.ninja_log
+
+########################################
+# macOS specific
+########################################
+.DS_Store
+
+########################################
+# CTest (optional)
+########################################
+Testing/
+DartConfiguration.tcl
+CTestTestfile.cmake
