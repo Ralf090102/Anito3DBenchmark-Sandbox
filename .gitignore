@@ -5,6 +5,7 @@ build/
 out/
 bin/
 obj/
+external/
 
 ########################################
 # Visual Studio 2022 generated files
