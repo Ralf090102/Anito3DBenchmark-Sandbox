@@ -1,7 +1,6 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.20)
 project("Anito3DBenchmarkSandbox" LANGUAGES CXX)
-
-include(FetchContent)
+set(SandboxMainExecutable Anito3DBenchmarkSandbox)
 
 # ==== Compiler settings ====
 set(CMAKE_CXX_STANDARD 20)
@@ -20,42 +19,36 @@ if (MSVC)
 endif()
 
 # ==== Dependency Management ====
-# EXCLUDE_FROM_ALL => Prevents library from being built unless explicitly needed.
-# SYSTEM => Suppresses compiler warnings from library headers.
-
+include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/external)
 file(MAKE_DIRECTORY ${FETCHCONTENT_BASE_DIR})
 
-FetchContent_Declare(assimp
-        GIT_REPOSITORY https://github.com/assimp/assimp.git
-        GIT_TAG v6.0.2
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE
-)
-
-if(TARGET assimp)
-    set_target_properties(assimp PROPERTIES
-        EXCLUDE_FROM_ALL TRUE
-        SYSTEM TRUE
-    )
-endif()
-
-FetchContent_Declare(big2
-	GIT_REPOSITORY "https://github.com/Paper-Cranes-Ltd/big2-stack.git"
-    GIT_TAG "v0.0.9"
+# Assimp is used for loading 3D models
+FetchContent_Declare(
+    assimp
+    GIT_REPOSITORY https://github.com/assimp/assimp.git
+    GIT_TAG v6.0.2
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE
 )
+FetchContent_MakeAvailable(assimp)
+set_target_properties(assimp PROPERTIES EXCLUDE_FROM_ALL TRUE SYSTEM TRUE)
 
-if(TARGET big2)
-    set_target_properties(assimp PROPERTIES
-        EXCLUDE_FROM_ALL TRUE
-        SYSTEM TRUE
-    )
+
+# Big2 is a C++ library for 3D graphics and physics simulation
+# BGFX, GLM, GLFW, IMGUI, SPDLOG
+FetchContent_Declare(
+    big2
+    GIT_REPOSITORY https://github.com/Paper-Cranes-Ltd/big2-stack.git
+    GIT_TAG v0.0.9
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE
+)
+FetchContent_GetProperties(big2)
+if (NOT big2_POPULATED)
+    FetchContent_MakeAvailable(big2)
 endif()
 
-FetchContent_MakeAvailable(assimp)
-FetchContent_MakeAvailable(big2)
 
 # ==== Output directories ====
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -67,8 +60,8 @@ add_subdirectory(src)
 add_subdirectory(tests)
 
 # ==== Platform-specific options ====
-if (UNIX)
-	target_compile_definitions(Anito3DBenchmark-Sandbox PRIVATE PLATFORM_UNIX)
-elseif (WIN32)
-	target_compile_definitions(Anito3DBenchmark-Sandbox PRIVATE PLATFORM_WINDOWS)
+if(UNIX)
+    add_compile_definitions(PLATFORM_UNIX)
+elseif(WIN32)
+    add_compile_definitions(PLATFORM_WINDOWS)
 endif()
