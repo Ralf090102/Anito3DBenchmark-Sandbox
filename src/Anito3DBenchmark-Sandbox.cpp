@@ -4,7 +4,7 @@ using namespace std;
 
 int main()
 {
-	cout << "Hello CMake XD" << endl;
+	cout << "Hello CMake XDD" << endl;
 
 	return 0;
 }
