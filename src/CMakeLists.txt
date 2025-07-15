@@ -4,13 +4,11 @@ add_subdirectory(bgfx)
 add_subdirectory(ogre3D)
 add_subdirectory(diligentEngine)
 
-set(SandboxMainExecutable Anito3DBenchmarkSandbox)
 add_executable (${SandboxMainExecutable} "Anito3DBenchmark-Sandbox.cpp")
 
 # Link dependencies to the executable
 target_link_libraries(${SandboxMainExecutable} PRIVATE
 	assimp::assimp
-    big2
 )
 
 # Include directories for the executable

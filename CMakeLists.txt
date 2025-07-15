@@ -44,10 +44,7 @@ FetchContent_Declare(
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE
 )
-FetchContent_GetProperties(big2)
-if (NOT big2_POPULATED)
-    FetchContent_MakeAvailable(big2)
-endif()
+FetchContent_MakeAvailable(big2)
 
 
 # ==== Output directories ====
