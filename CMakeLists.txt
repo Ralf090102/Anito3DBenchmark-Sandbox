@@ -18,34 +18,26 @@ if (MSVC)
 	"$<IF:$<CONFIG:Debug,RelWithDebInfo>,EditAndContinue,ProgramDatabase>")
 endif()
 
+set(PROJ_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src" CACHE PATH "Project SRC" FORCE)
+set(PROJ_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/assets" CACHE PATH "Project ASSETS" FORCE)
+set(PROJ_TESTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests" CACHE PATH "Project TESTS" FORCE)
+
 # ==== Dependency Management ====
 include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/external)
 file(MAKE_DIRECTORY ${FETCHCONTENT_BASE_DIR})
 
-# Assimp is used for loading 3D models
-FetchContent_Declare(
-    assimp
-    GIT_REPOSITORY https://github.com/assimp/assimp.git
-    GIT_TAG v6.0.2
-    GIT_SHALLOW TRUE
-    GIT_PROGRESS TRUE
-)
-FetchContent_MakeAvailable(assimp)
-set_target_properties(assimp PROPERTIES EXCLUDE_FROM_ALL TRUE SYSTEM TRUE)
+include(${CMAKE_SOURCE_DIR}/cmake/utils.cmake)
 
+# Assimp is used for loading 3D models
+import_assimp()
 
 # Big2 is a C++ library for 3D graphics and physics simulation
 # BGFX, GLM, GLFW, IMGUI, SPDLOG
-FetchContent_Declare(
-    big2
-    GIT_REPOSITORY https://github.com/Paper-Cranes-Ltd/big2-stack.git
-    GIT_TAG v0.0.9
-    GIT_SHALLOW TRUE
-    GIT_PROGRESS TRUE
-)
-FetchContent_MakeAvailable(big2)
+import_big2()
 
+# NG-Log is a lightweight logging library
+import_nglog()
 
 # ==== Output directories ====
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
