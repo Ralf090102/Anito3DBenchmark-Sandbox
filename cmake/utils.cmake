@@ -24,7 +24,7 @@ endfunction()
 function(link_assimp)
     message(STATUS "=== [Assimp] Linking AssimpStart  ===")
 
-    target_include_directories(${SandboxMainExecutable} PRIVATE external/assimp-src/include)
+    target_include_directories(${SandboxMainExecutable} PRIVATE ${assimp_SOURCE_DIR}/include)
     target_link_libraries(${SandboxMainExecutable} PUBLIC assimp)
 
     message(STATUS "=== [Assimp] Linking Assimp Done ===")
@@ -65,7 +65,7 @@ endfunction()
 function(import_nglog)
     message(STATUS "=== [NG-Log] Importing NG-Log Start ===")    
 
-    fetchcontent_declare(
+    FetchContent_Declare(
         ng-log
         GIT_REPOSITORY https://github.com/ng-log/ng-log.git
         GIT_TAG v0.8.1
@@ -83,10 +83,10 @@ function(link_nglog)
     message(STATUS "=== [NG-Log] Linking NG-Log Start ===")    
 
     target_link_libraries (${SandboxMainExecutable} PUBLIC ng-log)
-    cmake_path(SET ANITO3DSANDBOX_LOG_PATH "${CMAKE_CURRENT_BINARY_DIR}/Anito3DSandboxLogs")
+    set(ANITO3DSANDBOX_LOG_PATH "${CMAKE_CURRENT_BINARY_DIR}/Anito3DSandboxLogs")
 
-    target_compile_definitions (${SandboxMainExecutable} PUBLIC ANITO3D_LOG_PATH="${ANITO3DSANDBOX_LOG_PATH}")
-    file(MAKE_DIRECTORY "$ANITO3DSANDBOX_LOG_PATH}")
+    target_compile_definitions (${SandboxMainExecutable} PUBLIC ANITO3DSANDBOX_LOG_PATH=\"${ANITO3DSANDBOX_LOG_PATH}\")
+    file(MAKE_DIRECTORY "${ANITO3DSANDBOX_LOG_PATH}")
 
     message(STATUS "=== [NG-Log] Linking NG-Log Done ===")    
 endfunction()
