@@ -18,9 +18,19 @@ if (MSVC)
 	"$<IF:$<CONFIG:Debug,RelWithDebInfo>,EditAndContinue,ProgramDatabase>")
 endif()
 
+# ==== Build type ====
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
+# ==== Project paths ====
 set(PROJ_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src" CACHE PATH "Project SRC" FORCE)
 set(PROJ_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/assets" CACHE PATH "Project ASSETS" FORCE)
 set(PROJ_TESTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests" CACHE PATH "Project TESTS" FORCE)
+
+add_compile_definitions(PROJ_SRC_DIR="${CMAKE_SOURCE_DIR}/src")
+add_compile_definitions(PROJ_ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
+add_compile_definitions(PROJ_TESTS_DIR="${CMAKE_SOURCE_DIR}/tests")
 
 # ==== Dependency Management ====
 include(FetchContent)
