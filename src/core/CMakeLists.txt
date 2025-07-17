@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(Anito3DCore LANGUAGES CXX)
 
 # Add subdirectories
+add_subdirectory(imgui)
 add_subdirectory(vulkan)
 
 # Core library (to be linked by bgfx, ogre3D, diligentEngine)

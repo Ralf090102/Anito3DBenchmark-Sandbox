@@ -8,5 +8,6 @@ target_link_libraries(Anito3DVulkan PUBLIC
     vk-bootstrap
     imgui
     glfw
+    Anito3DImGui
     ng-log
 )

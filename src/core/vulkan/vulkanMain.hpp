@@ -6,6 +6,9 @@
 #include <imgui.h>
 #include <functional>
 
+#include "imGuiMain.hpp"
+#include "anitoImGuiStyle.hpp"
+
 namespace Anito3D {
 
 	class VulkanMain {

@@ -76,13 +76,16 @@ int main(int argc, char* argv[]) {
 
         // Switch to selected renderer
         if (selectedRenderer == 1) { // BGFX
-            //runBgfxRenderer(ImGui::GetCurrentContext());
+            // runBgfxRenderer(ImGui::GetCurrentContext());
             LOG(INFO) << "Returned from BGFX renderer";
+        }
+        else if (selectedRenderer >= 2 && selectedRenderer <= 8) { // Other renderers
+            LOG(INFO) << "Selected renderer ID " << selectedRenderer << " not implemented";
         }
         else if (selectedRenderer == 0) { // Window closed
             break;
         }
-        // Add Ogre3D and Diligent Engine cases later
+
     }
 
 

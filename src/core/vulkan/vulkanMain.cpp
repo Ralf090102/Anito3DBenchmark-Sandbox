@@ -1,6 +1,7 @@
 #include "vulkanMain.hpp"
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
+#include <IconsFontAwesome5.h>
 #include <ng-log/logging.h>
 
 namespace Anito3D {
@@ -142,6 +143,14 @@ namespace Anito3D {
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
+
+        io.Fonts->AddFontDefault();
+        static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+        ImFontConfig icons_config;
+        icons_config.MergeMode = true;
+        icons_config.PixelSnapH = true;
+        io.Fonts->AddFontFromFileTTF(PROJ_ASSETS_DIR "/fonts/fontawesome-webfont.ttf", 16.0f, &icons_config, icons_ranges);
+
         if (!ImGui_ImplGlfw_InitForVulkan(window, true)) {
             LOG(ERROR) << "Failed to initialize ImGui GLFW backend";
             throw std::runtime_error("ImGui GLFW initialization failed");
@@ -303,6 +312,10 @@ namespace Anito3D {
             return 0;
         }
 
+        // Initialize ImGui style and main menu
+        AnitoImGuiStyle::applyStyle();
+        ImGuiMain imguiMain;
+
         int selectedRenderer = 0; // 0 = none, 1 = BGFX, 2 = Ogre3D, 3 = Diligent
         uint32_t currentFrame = 0;
 
@@ -313,12 +326,15 @@ namespace Anito3D {
             ImGui::NewFrame();
 
             // Main menu UI
-            ImGui::Begin("Anito3D Benchmark Menu");
-            ImGui::Text("Select Renderer:");
-            if (ImGui::Button("BGFX")) selectedRenderer = 1;
-            ImGui::Button("Ogre3D (Coming Soon)");
-            ImGui::Button("Diligent Engine (Coming Soon)");
-            ImGui::End();
+            try {
+                selectedRenderer = imguiMain.renderMainMenu();
+            }
+            catch (const std::exception& e) {
+                LOG(ERROR) << "ImGuiMain::renderMainMenu exception: " << e.what();
+                break;
+            }
+
+            if (selectedRenderer != 0) break;
 
             // Render
             vkWaitForFences(device.device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);

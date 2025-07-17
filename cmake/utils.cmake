@@ -89,3 +89,18 @@ function(link_nglog)
 
     message(STATUS "=== [NG-Log] Linking NG-Log Done ===")    
 endfunction()
+
+# IconFontCppHeaders
+function(import_IconFontCppHeaders)
+    message(STATUS "=== [IconFontCppHeaders] Importing IconFontCppHeaders Start ===")   
+
+    FetchContent_Declare(
+        IconFontCppHeaders
+        GIT_REPOSITORY https://github.com/juliettef/IconFontCppHeaders.git
+        GIT_TAG main
+        GIT_SHALLOW TRUE
+    )
+    FetchContent_MakeAvailable(IconFontCppHeaders)
+
+    message(STATUS "=== [IconFontCppHeaders] Importing IconFontCppHeaders Done ===")   
+endfunction()
