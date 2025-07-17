@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.20)
 
 project(Anito3DCore LANGUAGES CXX)
 
+# Add subdirectories
+add_subdirectory(imgui)
+add_subdirectory(vulkan)
+
 # Core library (to be linked by bgfx, ogre3D, diligentEngine)
 add_library(Anito3DCore STATIC
     objects/Entity.cpp
@@ -18,4 +22,7 @@ target_include_directories(Anito3DCore PUBLIC
 )
 
 # Link dependencies
-target_link_libraries(Anito3DCore PUBLIC assimp::assimp)
+target_link_libraries(Anito3DCore PUBLIC
+    Anito3DVulkan
+    assimp::assimp
+)

@@ -27,6 +27,7 @@ endif()
 set(PROJ_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src" CACHE PATH "Project SRC" FORCE)
 set(PROJ_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/assets" CACHE PATH "Project ASSETS" FORCE)
 set(PROJ_TESTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests" CACHE PATH "Project TESTS" FORCE)
+set(PROJ_EXTERNAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external" CACHE PATH "Project EXTERNAL" FORCE)
 
 add_compile_definitions(PROJ_SRC_DIR="${CMAKE_SOURCE_DIR}/src")
 add_compile_definitions(PROJ_ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
@@ -38,6 +39,7 @@ set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/external)
 file(MAKE_DIRECTORY ${FETCHCONTENT_BASE_DIR})
 
 include(${CMAKE_SOURCE_DIR}/cmake/utils.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/vulkan.cmake)
 
 # Assimp is used for loading 3D models
 import_assimp()
@@ -48,6 +50,13 @@ import_big2()
 
 # NG-Log is a lightweight logging library
 import_nglog()
+
+# Import Vulkan and vk-bootstrap for Vulkan API support
+import_vulkan()
+import_vkbootstrap()
+
+# Import IconFontCppHeaders
+import_IconFontCppHeaders()
 
 # ==== Output directories ====
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
