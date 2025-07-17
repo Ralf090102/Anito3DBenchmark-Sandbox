@@ -60,7 +60,6 @@ function(link_bgfx_big2)
     message(STATUS "=== [BGFX] Linking BIG2 BGFX Done ===")
 endfunction()
 
-
 # NG-Log Logger
 function(import_nglog)
     message(STATUS "=== [NG-Log] Importing NG-Log Start ===")    
