@@ -6,8 +6,8 @@
 #include <imgui.h>
 #include <functional>
 
-#include "imGuiMain.hpp"
-#include "anitoImGuiStyle.hpp"
+#include "ImGuiMain.hpp"
+#include "AnitoImGuiStyle.hpp"
 
 namespace Anito3D {
 
@@ -18,8 +18,10 @@ namespace Anito3D {
 
 		bool init(GLFWwindow* window, uint32_t width, uint32_t height);
 
-		// Run the main menu loop, returns selected renderer (0 = none, 1 = BGFX, etc.)
-		int runMainMenu(GLFWwindow* window);
+        // Render the main menu, returns selected renderer (-1 = None, 1 = BGFX, 2 = Diligent, etc.)
+        int runMainMenu(GLFWwindow* window);
+
+        void recreateSwapchain(GLFWwindow* window, uint32_t width, uint32_t height);
 
 		void cleanup();
 
@@ -30,6 +32,7 @@ namespace Anito3D {
         vkb::PhysicalDevice physicalDevice;
         vkb::Device device;
         VkQueue graphicsQueue;
+        VkQueue presentQueue;
         vkb::Swapchain swapchain;
         std::vector<VkImage> swapchainImages;
         std::vector<VkImageView> swapchainImageViews;

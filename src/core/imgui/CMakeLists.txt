@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 project(Anito3DImGui LANGUAGES CXX)
 
 add_library(Anito3DImGui STATIC
-    imGuiMain.cpp
-    anitoImGuiStyle.cpp
+    "ImGuiMain.cpp"
+    "AnitoImGuiStyle.cpp"
 )
 
 target_include_directories(Anito3DImGui PUBLIC

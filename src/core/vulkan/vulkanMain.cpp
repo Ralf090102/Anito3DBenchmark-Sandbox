@@ -3,6 +3,7 @@
 #include <backends/imgui_impl_vulkan.h>
 #include <IconsFontAwesome5.h>
 #include <ng-log/logging.h>
+#include <filesystem>
 
 namespace Anito3D {
 
@@ -144,12 +145,38 @@ namespace Anito3D {
         ImGuiIO& io = ImGui::GetIO();
         io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
 
-        io.Fonts->AddFontDefault();
-        static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+        const std::string interFontPath = std::string(PROJ_ASSETS_DIR) + "/fonts/Inter-Regular.ttf";
+        const std::string faFontPath = std::string(PROJ_ASSETS_DIR) + "/fonts/fontawesome-webfont.ttf";
+
+        if (!std::filesystem::exists(interFontPath)) {
+            LOG(ERROR) << "Inter-Regular font file not found at: " << interFontPath;
+            throw std::runtime_error("Inter-Regular font file not found");
+        }
+        if (!std::filesystem::exists(faFontPath)) {
+            LOG(ERROR) << "FontAwesome font file not found at: " << faFontPath;
+            throw std::runtime_error("FontAwesome font file not found");
+        }
+        LOG(INFO) << "Font files found: Inter-Regular at " << interFontPath << ", FontAwesome at " << faFontPath;
+
+        // Load Inter-Regular as default font
+        ImFont* defaultFont = io.Fonts->AddFontFromFileTTF(interFontPath.c_str(), 28.0f);
+        if (!defaultFont) {
+            LOG(ERROR) << "Failed to load Inter-Regular font from: " << interFontPath;
+            throw std::runtime_error("Inter-Regular font loading failed");
+        }
+        LOG(INFO) << "Inter-Regular font loaded successfully";
+
+        // Merge FontAwesome for icons
+        static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 }; // FontAwesome 4.7 range
         ImFontConfig icons_config;
         icons_config.MergeMode = true;
         icons_config.PixelSnapH = true;
-        io.Fonts->AddFontFromFileTTF(PROJ_ASSETS_DIR "/fonts/fontawesome-webfont.ttf", 16.0f, &icons_config, icons_ranges);
+        ImFont* faFont = io.Fonts->AddFontFromFileTTF(faFontPath.c_str(), 28.0f, &icons_config, icons_ranges);
+        if (!faFont) {
+            LOG(ERROR) << "Failed to load FontAwesome font from: " << faFontPath;
+            throw std::runtime_error("FontAwesome font loading failed");
+        }
+        LOG(INFO) << "FontAwesome font merged successfully";
 
         if (!ImGui_ImplGlfw_InitForVulkan(window, true)) {
             LOG(ERROR) << "Failed to initialize ImGui GLFW backend";
@@ -327,7 +354,7 @@ namespace Anito3D {
 
             // Main menu UI
             try {
-                selectedRenderer = imguiMain.renderMainMenu();
+                selectedRenderer = imguiMain.renderMainMenu(window);
             }
             catch (const std::exception& e) {
                 LOG(ERROR) << "ImGuiMain::renderMainMenu exception: " << e.what();

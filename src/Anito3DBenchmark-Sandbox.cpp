@@ -8,11 +8,13 @@
 
 #include "vulkanMain.hpp"
 #include "MeshEntity.hpp"
+#include "ImGuiMain.hpp"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
 void loadModel(const std::string& modelPath);
+void loadModels(const std::vector<std::string>& modelPaths);
 void glfwErrorCallback(int error, const char* description);
 
 int main(int argc, char* argv[]) {
@@ -62,6 +64,7 @@ int main(int argc, char* argv[]) {
         LOG(INFO) << "Vulkan initialized successfully";
 
         // Run main menu and get selected renderer
+        Anito3D::ImGuiMain imguiMain; // Create ImGuiMain instance to access getters
         int selectedRenderer = 0;
         try {
             selectedRenderer = vulkanMain.runMainMenu(window);
@@ -70,21 +73,23 @@ int main(int argc, char* argv[]) {
             LOG(ERROR) << "VulkanMain runMainMenu exception: " << e.what();
         }
 
-        // Cleanup main menu
-        vulkanMain.cleanup();
-        glfwDestroyWindow(window);
-
         // Switch to selected renderer
         if (selectedRenderer == 1) { // BGFX
+            loadModels(imguiMain.getSelectedModelPaths());
             // runBgfxRenderer(ImGui::GetCurrentContext());
             LOG(INFO) << "Returned from BGFX renderer";
         }
-        else if (selectedRenderer >= 2 && selectedRenderer <= 8) { // Other renderers
-            LOG(INFO) << "Selected renderer ID " << selectedRenderer << " not implemented";
+        else if (selectedRenderer == -1) { // None
+            LOG(INFO) << "No renderer selected, returning to main menu";
         }
         else if (selectedRenderer == 0) { // Window closed
             break;
         }
+        // Add cases for Diligent (2), Falcor (3), etc., later
+
+        // Cleanup main menu
+        vulkanMain.cleanup();
+        glfwDestroyWindow(window);
 
     }
 
@@ -102,6 +107,12 @@ void loadModel(const std::string& modelPath) {
     }
     else {
         LOG(ERROR) << "Failed to load mesh from " << modelPath;
+    }
+}
+
+void loadModels(const std::vector<std::string>& modelPaths) {
+    for (const auto& modelPath : modelPaths) {
+        loadModel(modelPath);
     }
 }
 

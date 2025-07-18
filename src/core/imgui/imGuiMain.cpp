@@ -1,12 +1,12 @@
-#include "imGuiMain.hpp"
+#include "ImGuiMain.hpp"
 #include <ng-log/logging.h>
 #include <IconsFontAwesome5.h>
 
 namespace Anito3D {
 
-    ImGuiMain::ImGuiMain() : showSettings(false), selectedModel(""), selectedScene(""),
-        selectedRendererIndex(0), selectedModelIndex(0), selectedSceneIndex(0),
+    ImGuiMain::ImGuiMain() : selectedScene(""), selectedRendererIndex(0), selectedSceneIndex(0), selectedResolutionIndex(0),
         rayTracingEnabled(false), pbrEnabled(false), giEnabled(false) {
+
         // Initialize renderer options
         renderers = {
             "None",
@@ -23,10 +23,13 @@ namespace Anito3D {
         // Initialize model options (placeholder paths, update as needed)
         models = {
             "None",
-            "models/3D/sphere.obj",
-            "models/3D/cube.obj",
-            "models/3D/bunny.obj"
+            "sphere.obj",
+            "cube.obj",
+            "bunny.obj"
         };
+
+        selectedModelIndices = { 0 }; // Start with one dropdown
+        selectedModels = { "" };      // Start with "None"
 
         // Initialize scene options
         scenes = {
@@ -35,47 +38,137 @@ namespace Anito3D {
             "Amazon Lumberyard",
             "Bistro"
         };
+
+        // Initialize resolution options
+        resolutions = {
+            "2560x1440",
+            "1920x1080",
+            "1920x1200",
+            "1600x900",
+            "1536x864",
+            "1440x900",
+            "1366x768",
+            "1360x768",
+            "1280x1024",
+            "1280x800",
+            "1280x720",
+            "1024x768"
+        };
+
+        // Set initial resolution to 1280x720
+        for (size_t i = 0; i < resolutions.size(); ++i) {
+            if (resolutions[i] == "1280x720") {
+                selectedResolutionIndex = static_cast<int>(i);
+                break;
+            }
+        }
     }
 
     void ImGuiMain::resetSelections() {
         selectedRendererIndex = 0;
-        selectedModelIndex = 0;
         selectedSceneIndex = 0;
-        selectedModel = "";
+        selectedModelIndices = { 0 };
+        selectedModels = { "" };
         selectedScene = "";
         rayTracingEnabled = false;
         pbrEnabled = false;
         giEnabled = false;
-        showSettings = false;
+
         LOG(INFO) << "Main menu selections reset";
     }
 
-    int ImGuiMain::renderMainMenu() {
-        int selectedRenderer = 0; // 0 = none, 1 = BGFX, 2 = Diligent, etc., -1 = "None"
+    void ImGuiMain::applySettings() {
+        LOG(INFO) << "Applied settings: Resolution=" << resolutions[selectedResolutionIndex]
+            << ", RayTracing=" << (rayTracingEnabled ? "Enabled" : "Disabled")
+            << ", PBR=" << (pbrEnabled ? "Enabled" : "Disabled")
+            << ", GI=" << (giEnabled ? "Enabled" : "Disabled");
+    }
 
-        // Set window size and position
-        ImGui::SetNextWindowSize(ImVec2(600, 500), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Anito 3D Benchmark", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+    std::string ImGuiMain::getSelectedModel() const {
+        if (selectedModels.size() > 1) {
+            return "Multiple Models";
+        }
+        return selectedModels.empty() ? "None" : selectedModels[0];
+    }
 
-        // Header with "logo" (text-based with icon)
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.26f, 0.59f, 0.98f, 1.0f));
+    void ImGuiMain::updateWindowResolution(GLFWwindow* window) {
+        if (!window) {
+            LOG(ERROR) << "Invalid GLFW window pointer";
+            return;
+        }
+
+        std::string res = resolutions[selectedResolutionIndex];
+        size_t xPos = res.find('x');
+        if (xPos == std::string::npos) {
+            LOG(ERROR) << "Invalid resolution format: " << res;
+            return;
+        }
+
+        int width = std::stoi(res.substr(0, xPos));
+        int height = std::stoi(res.substr(xPos + 1));
+        glfwSetWindowSize(window, width, height);
+        LOG(INFO) << "Window resized to: " << width << "x" << height;
+
+        // Update ImGui display size
+        ImGuiIO& io = ImGui::GetIO();
+        io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
+    }
+
+
+
+    int ImGuiMain::renderMainMenu(GLFWwindow* window) {
+        AnitoImGuiStyle anitoImGuiStyle;
+
+        int selectedRenderer = 0; // -1 = None, 1 = BGFX, 2 = Diligent, etc.
+
+        // Get GLFW window size
+        ImVec2 displaySize = ImGui::GetIO().DisplaySize;
+
+        if (displaySize.x <= 0 || displaySize.y <= 0) {
+            return -1;
+        }
+
+        // Calculate child sizes
+        float footerHeight = displaySize.y * 0.25f;
+        float mainChildHeight = displaySize.y - footerHeight;
+
+        // Set ImGui window to full-screen
+        ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(displaySize, ImGuiCond_Always);
+        ImGui::Begin("Anito 3D Benchmark", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
+
+        ImGui::BeginChild("MainContent", ImVec2(0, mainChildHeight), false);
+
+        // Header
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(anitoImGuiStyle.getAccentGreen()));
+        ImGui::SetCursorPosX((displaySize.x - ImGui::CalcTextSize(ICON_FA_CUBE " Anito 3D Benchmark Sandbox").x) * 0.5f);
         ImGui::Text(ICON_FA_CUBE " Anito 3D Benchmark Sandbox");
         ImGui::PopStyleColor();
+
+        ImGui::SetCursorPosX((displaySize.x - ImGui::CalcTextSize("Version 1.0.0 | Powered by Vulkan").x) * 0.5f);
         ImGui::Text("Version 1.0.0 | Powered by Vulkan");
         ImGui::Separator();
 
-        // Two-column layout for selections
+        // Two-column layout
+        float padding = 15.0f;
         ImGui::Columns(2, nullptr, false);
-        ImGui::SetColumnWidth(0, 350);
+        ImGui::SetColumnWidth(0, displaySize.x * 0.5f);
+
+        ImVec2 childSize = ImVec2(displaySize.x * 0.5f - 2 * padding, displaySize.y - ImGui::GetCursorPosY() - padding);
+        ImGui::SetCursorPosX(padding);
+        ImGui::BeginChild("Selections", childSize, false, ImGuiWindowFlags_NoBackground);
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
         // Renderer selection
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(anitoImGuiStyle.getAccentGreen()));
         ImGui::Text(ICON_FA_DESKTOP " Renderer");
+        ImGui::PopStyleColor();
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
         std::vector<const char*> rendererItems(renderers.size());
         for (size_t i = 0; i < renderers.size(); ++i) {
             rendererItems[i] = renderers[i].c_str();
         }
-        ImGui::SetNextItemWidth(300);
+        ImGui::SetNextItemWidth(displaySize.x * 0.4f);
         if (ImGui::Combo("##Renderer", &selectedRendererIndex, rendererItems.data(), rendererItems.size())) {
             LOG(INFO) << "Renderer selected: " << renderers[selectedRendererIndex];
         }
@@ -84,33 +177,87 @@ namespace Anito3D {
             ImGui::Text("Select rendering engine (only BGFX implemented)");
             ImGui::EndTooltip();
         }
-        ImGui::Text("Selected: %s", renderers[selectedRendererIndex].c_str());
 
-        // Model selection
-        ImGui::Text(ICON_FA_CUBE " Model");
+        ImGui::Dummy(ImVec2(0.0f, 15.0f));
+
+        // Model selection (dynamic dropdowns)
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(anitoImGuiStyle.getAccentGreen()));
+        ImGui::Text(ICON_FA_CUBE " Models");
+        ImGui::PopStyleColor();
+        if (selectedModelIndices.size() != selectedModels.size()) {
+            selectedModels.resize(selectedModelIndices.size(), "");
+        }
         std::vector<const char*> modelItems(models.size());
         for (size_t i = 0; i < models.size(); ++i) {
             modelItems[i] = models[i].c_str();
         }
-        ImGui::SetNextItemWidth(300);
-        if (ImGui::Combo("##Model", &selectedModelIndex, modelItems.data(), modelItems.size())) {
-            selectedModel = models[selectedModelIndex];
-            LOG(INFO) << "Model selected: " << selectedModel;
+        float modelListMaxHeight = 3 * 60.0f;
+        ImGui::BeginChild("ModelList", ImVec2(0, modelListMaxHeight), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+
+        if (selectedModelIndices.empty()) {
+            selectedModelIndices.push_back(0);
+            selectedModels.push_back("");
+        }
+
+        for (size_t i = 0; i < selectedModelIndices.size(); ++i) {
+            ImGui::Dummy(ImVec2(0.0f, 8.0f));
+            ImGui::PushID(static_cast<int>(i));
+            ImGui::SetNextItemWidth(displaySize.x * 0.35f);
+            if (ImGui::Combo("##Model", &selectedModelIndices[i], modelItems.data(), modelItems.size())) {
+                selectedModels[i] = modelPath + models[selectedModelIndices[i]];
+                LOG(INFO) << "Model " << i << " selected: " << selectedModels[i];
+            }
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                ImGui::Text("Select 3D model for benchmarking");
+                ImGui::EndTooltip();
+            }
+
+            if (i > 0) {
+                ImGui::SameLine();
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
+                if (ImGui::Button(ICON_FA_TRASH, ImVec2(55, 40))) {
+                    selectedModelIndices.erase(selectedModelIndices.begin() + i);
+                    selectedModels.erase(selectedModels.begin() + i);
+                    LOG(INFO) << "Removed model dropdown " << i;
+                    ImGui::PopID();
+                    continue;
+                }
+                if (ImGui::IsItemHovered()) {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("Remove this model selection");
+                    ImGui::EndTooltip();
+                }
+            }
+
+            ImGui::PopID();
+            ImGui::Spacing();
+        }
+        ImGui::EndChild();
+
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+        if (ImGui::Button(ICON_FA_PLUS " Add Model", ImVec2(175, 40))) {
+            selectedModelIndices.push_back(0);
+            selectedModels.push_back("");
+            LOG(INFO) << "Added new model dropdown";
         }
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
-            ImGui::Text("Select 3D model for benchmarking");
+            ImGui::Text("Add another model selection");
             ImGui::EndTooltip();
         }
-        ImGui::Text("Selected: %s", selectedModel.empty() ? "None" : selectedModel.c_str());
+
+        ImGui::Dummy(ImVec2(0.0f, 15.0f));
 
         // Scene selection
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(anitoImGuiStyle.getAccentGreen()));
         ImGui::Text(ICON_FA_IMAGE " Scene");
+        ImGui::PopStyleColor();
         std::vector<const char*> sceneItems(scenes.size());
         for (size_t i = 0; i < scenes.size(); ++i) {
             sceneItems[i] = scenes[i].c_str();
         }
-        ImGui::SetNextItemWidth(300);
+        ImGui::SetNextItemWidth(displaySize.x * 0.4f);
         if (ImGui::Combo("##Scene", &selectedSceneIndex, sceneItems.data(), sceneItems.size())) {
             selectedScene = scenes[selectedSceneIndex];
             LOG(INFO) << "Scene selected: " << selectedScene;
@@ -120,38 +267,98 @@ namespace Anito3D {
             ImGui::Text("Select scene for benchmarking");
             ImGui::EndTooltip();
         }
-        ImGui::Text("Selected: %s", selectedScene.empty() ? "None" : selectedScene.c_str());
+
+        
+        ImGui::PopStyleVar();
+        ImGui::EndChild();
 
         ImGui::NextColumn();
 
-        // Settings and actions
+        // Right column: Settings and Actions
+        childSize = ImVec2(displaySize.x * 0.4f - 2 * padding, displaySize.y - ImGui::GetCursorPosY() - padding);
+        ImGui::SetCursorPosX(displaySize.x * 0.6f + padding);
+        ImGui::BeginChild("SettingsAndActions", childSize, false, ImGuiWindowFlags_NoBackground);
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+        // Settings
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(anitoImGuiStyle.getAccentGreen()));
         ImGui::Text(ICON_FA_COG " Settings");
-        if (ImGui::Button(ICON_FA_WRENCH " Configure", ImVec2(150, 40))) {
-            showSettings = !showSettings;
+        ImGui::PopStyleColor();
+
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+        ImGui::Text("Window Resolution");
+        std::vector<const char*> resolutionItems(resolutions.size());
+        for (size_t i = 0; i < resolutions.size(); ++i) {
+            resolutionItems[i] = resolutions[i].c_str();
+        }
+        ImGui::SetNextItemWidth(displaySize.x * 0.3f);
+        if (ImGui::Combo("##Resolution", &selectedResolutionIndex, resolutionItems.data(), resolutionItems.size())) {
+            LOG(INFO) << "Resolution selected: " << resolutions[selectedResolutionIndex];
         }
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
-            ImGui::Text("Toggle benchmark settings");
+            ImGui::Text("Select window resolution for benchmarking");
             ImGui::EndTooltip();
         }
 
-        // Launch button (disabled if "None" selected)
-        bool canLaunch = selectedRendererIndex > 0; // Only BGFX implemented
-        if (!canLaunch) ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-        if (ImGui::Button(ICON_FA_PLAY " Launch", ImVec2(150, 40)) && canLaunch) {
-            selectedRenderer = selectedRendererIndex; // 1 = BGFX, 2 = Diligent, etc.
-            LOG(INFO) << "Launching renderer: " << renderers[selectedRendererIndex];
-        }
-        if (ImGui::IsItemHovered() && !canLaunch) {
+        // Configurations sub-header
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+        ImGui::Text("Configurations");
+        ImGui::Checkbox("Enable Ray Tracing", &rayTracingEnabled);
+        if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
-            ImGui::Text("Select a renderer to launch");
+            ImGui::Text("Enable real-time ray tracing (if supported)");
             ImGui::EndTooltip();
+        }
+        ImGui::Checkbox("Enable PBR", &pbrEnabled);
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Enable physically-based rendering");
+            ImGui::EndTooltip();
+        }
+        ImGui::Checkbox("Enable Global Illumination", &giEnabled);
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Enable global illumination effects");
+            ImGui::EndTooltip();
+        }
+        ImGui::EndChild();
+        ImGui::EndChild();
+
+        ImGui::Separator();
+
+        ImGui::Dummy(ImVec2(0.0f, 3.0f));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
+        ImGui::Text(ICON_FA_INFO_CIRCLE " Status: Ready | Renderer: %s | Model: %s | Scene: %s | Resolution: %s",
+            renderers[selectedRendererIndex].c_str(),
+            getSelectedModel().c_str(),
+            selectedScene.empty() ? "None" : selectedScene.c_str(),
+            resolutions[selectedResolutionIndex].c_str());
+        ImGui::PopStyleColor();
+
+        // Launch and Reset
+        ImGui::Dummy(ImVec2(0.0f, 25.0f));
+
+        float buttonWidth = 200.0f;
+        float spacing = 20.0f;
+        float totalWidth = 2 * buttonWidth + spacing;
+        float centerPosX = (displaySize.x - totalWidth) * 0.5f;
+
+        ImGui::SetCursorPosX(centerPosX);
+        bool canLaunch = selectedRendererIndex > 0;
+        if (!canLaunch) ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+        if (ImGui::Button(ICON_FA_PLAY " Launch", ImVec2(buttonWidth, 40)) && canLaunch) {
+            applySettings();
+            selectedRenderer = selectedRendererIndex;
+            LOG(INFO) << "Launching renderer: " << renderers[selectedRendererIndex];
         }
         if (!canLaunch) ImGui::PopStyleVar();
 
-        // Reset button
-        if (ImGui::Button(ICON_FA_REDO " Reset", ImVec2(150, 40))) {
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(centerPosX + buttonWidth + spacing); // Right of Launch
+        if (ImGui::Button(ICON_FA_REDO " Reset", ImVec2(buttonWidth, 40))) {
             resetSelections();
+            LOG(INFO) << "Reset button clicked";
         }
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
@@ -159,52 +366,8 @@ namespace Anito3D {
             ImGui::EndTooltip();
         }
 
-        ImGui::Columns(1);
-        ImGui::PopStyleVar();
-
-        // Settings window (modal popup)
-        if (showSettings) {
-            ImGui::OpenPopup("Benchmark Settings");
-            ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_Appearing);
-            if (ImGui::BeginPopupModal("Benchmark Settings", &showSettings, ImGuiWindowFlags_AlwaysAutoResize)) {
-                ImGui::Text(ICON_FA_COGS " Benchmark Options");
-                ImGui::Separator();
-                ImGui::Checkbox("Enable Ray Tracing", &rayTracingEnabled);
-                if (ImGui::IsItemHovered()) {
-                    ImGui::BeginTooltip();
-                    ImGui::Text("Enable real-time ray tracing (if supported)");
-                    ImGui::EndTooltip();
-                }
-                ImGui::Checkbox("Enable PBR", &pbrEnabled);
-                if (ImGui::IsItemHovered()) {
-                    ImGui::BeginTooltip();
-                    ImGui::Text("Enable physically-based rendering");
-                    ImGui::EndTooltip();
-                }
-                ImGui::Checkbox("Enable Global Illumination", &giEnabled);
-                if (ImGui::IsItemHovered()) {
-                    ImGui::BeginTooltip();
-                    ImGui::Text("Enable global illumination effects");
-                    ImGui::EndTooltip();
-                }
-                ImGui::Separator();
-                if (ImGui::Button(ICON_FA_TIMES " Close", ImVec2(120, 30))) {
-                    showSettings = false;
-                }
-                ImGui::EndPopup();
-            }
-        }
-
-        // Status bar
-        ImGui::Separator();
-        ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), ICON_FA_INFO_CIRCLE " Status: Ready | Renderer: %s | Model: %s | Scene: %s",
-            renderers[selectedRendererIndex].c_str(),
-            selectedModel.empty() ? "None" : selectedModel.c_str(),
-            selectedScene.empty() ? "None" : selectedScene.c_str());
-
         ImGui::End();
 
-        // Return -1 if "None" is selected
         if (selectedRendererIndex == 0 && selectedRenderer != 0) {
             selectedRenderer = -1;
         }
