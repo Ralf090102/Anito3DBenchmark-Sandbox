@@ -1,7 +1,10 @@
 #pragma once
 #include <imgui.h>
+#include <GLFW/glfw3.h>
 #include <string>
 #include <vector>
+
+#include "AnitoImGuiStyle.hpp"
 
 namespace Anito3D {
 
@@ -11,7 +14,7 @@ namespace Anito3D {
         ~ImGuiMain() = default;
 
         // Render the main menu, returns selected renderer (0 = none, 1 = BGFX, 2 = Diligent, 3 = Falcor, etc.)
-        int renderMainMenu();
+        int renderMainMenu(GLFWwindow* window);
 
         // Getters for selected model, scene, and benchmark settings
         std::string getSelectedModel() const;
@@ -26,7 +29,7 @@ namespace Anito3D {
         void applySettings();
 
     private:
-        bool showSettings;
+        std::string modelPath = "models/3D/";
         std::string selectedScene;
         std::vector<std::string> selectedModels;
 
@@ -43,6 +46,9 @@ namespace Anito3D {
         std::vector<std::string> models;
         std::vector<std::string> scenes;
         std::vector<std::string> resolutions;
+
+        // Helper to parse resolution string and resize window
+        void updateWindowResolution(GLFWwindow* window);
     };
 
 }
