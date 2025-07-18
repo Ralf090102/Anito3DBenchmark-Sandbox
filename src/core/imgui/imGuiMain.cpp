@@ -139,8 +139,8 @@ namespace Anito3D {
 
         // Header
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(anitoImGuiStyle.getAccentGreen()));
-        ImGui::SetCursorPosX((displaySize.x - ImGui::CalcTextSize(ICON_FA_CUBE " Anito 3D Benchmark Sandbox").x) * 0.5f);
-        ImGui::Text(ICON_FA_CUBE " Anito 3D Benchmark Sandbox");
+        ImGui::SetCursorPosX((displaySize.x - ImGui::CalcTextSize(ICON_FA_CUBE " Anito 3D Benchmark").x) * 0.5f);
+        ImGui::Text(ICON_FA_CUBE " Anito 3D Benchmark");
         ImGui::PopStyleColor();
 
         ImGui::SetCursorPosX((displaySize.x - ImGui::CalcTextSize("Version 1.0.0 | Powered by Vulkan").x) * 0.5f);
@@ -318,7 +318,7 @@ namespace Anito3D {
 
         // Configurations sub-header
         ImGui::Dummy(ImVec2(0.0f, 10.0f));
-        ImGui::Text(ICON_FA_WRENCH "Configurations");
+        ImGui::Text(ICON_FA_WRENCH " Configurations");
         ImGui::Checkbox("Enable Ray Tracing", &rayTracingEnabled);
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();

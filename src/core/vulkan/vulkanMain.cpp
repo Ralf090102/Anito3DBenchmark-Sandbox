@@ -42,7 +42,7 @@ namespace Anito3D {
 
         // Create Vulkan instance with vk-bootstrap
         vkb::InstanceBuilder instanceBuilder;
-        auto instRet = instanceBuilder.set_app_name("Anito3D Benchmark Sandbox")
+        auto instRet = instanceBuilder.set_app_name("Anito3D Benchmark")
             .request_validation_layers(true)
             .use_default_debug_messenger()
             .require_api_version(1, 3, 0)
