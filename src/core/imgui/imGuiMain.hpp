@@ -29,6 +29,8 @@ namespace Anito3D {
         void applySettings();
 
     private:
+        bool showExitPopup = false;
+
         std::string modelPath = "models/3D/";
         std::string selectedScene;
         std::vector<std::string> selectedModels;

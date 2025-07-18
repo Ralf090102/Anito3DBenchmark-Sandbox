@@ -114,8 +114,6 @@ namespace Anito3D {
         io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
     }
 
-
-
     int ImGuiMain::renderMainMenu(GLFWwindow* window) {
         AnitoImGuiStyle anitoImGuiStyle;
 
@@ -147,6 +145,23 @@ namespace Anito3D {
 
         ImGui::SetCursorPosX((displaySize.x - ImGui::CalcTextSize("Version 1.0.0 | Powered by Vulkan").x) * 0.5f);
         ImGui::Text("Version 1.0.0 | Powered by Vulkan");
+
+        // "X" button
+        ImGui::SameLine(ImGui::GetWindowWidth() - 50);
+        ImGui::SetCursorPosY(10);
+        ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(200, 50, 50, 255));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(220, 80, 80, 255));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(180, 40, 40, 255));
+        if (ImGui::Button(ICON_FA_TIMES)) {
+            showExitPopup = true;
+        }
+        ImGui::PopStyleColor(3);
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Exit the application");
+            ImGui::EndTooltip();
+        }
+
         ImGui::Separator();
 
         // Two-column layout
@@ -161,7 +176,7 @@ namespace Anito3D {
 
         // Renderer selection
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(anitoImGuiStyle.getAccentGreen()));
-        ImGui::Text(ICON_FA_DESKTOP " Renderer");
+        ImGui::Text(ICON_FA_COGS " Renderer");
         ImGui::PopStyleColor();
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
         std::vector<const char*> rendererItems(renderers.size());
@@ -286,7 +301,7 @@ namespace Anito3D {
         ImGui::PopStyleColor();
 
         ImGui::Dummy(ImVec2(0.0f, 10.0f));
-        ImGui::Text("Window Resolution");
+        ImGui::Text(ICON_FA_DESKTOP " Window Resolution");
         std::vector<const char*> resolutionItems(resolutions.size());
         for (size_t i = 0; i < resolutions.size(); ++i) {
             resolutionItems[i] = resolutions[i].c_str();
@@ -303,7 +318,7 @@ namespace Anito3D {
 
         // Configurations sub-header
         ImGui::Dummy(ImVec2(0.0f, 10.0f));
-        ImGui::Text("Configurations");
+        ImGui::Text(ICON_FA_WRENCH "Configurations");
         ImGui::Checkbox("Enable Ray Tracing", &rayTracingEnabled);
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
@@ -366,6 +381,54 @@ namespace Anito3D {
             ImGui::EndTooltip();
         }
 
+        // Exit confirmation popup
+        ImGui::SetNextWindowPos(ImVec2(displaySize.x * 0.5f, displaySize.y * 0.5f), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_Appearing);
+
+        if (showExitPopup) {
+            ImGui::OpenPopup("Exit Confirmation");
+            showExitPopup = false;
+        }
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(30, 30)); // clean padding
+
+        if (ImGui::BeginPopupModal("Exit Confirmation", nullptr, ImGuiWindowFlags_NoResize)) {
+
+            // Center the text horizontally
+            const char* text = "Exit the Application?";
+            ImVec2 textSize = ImGui::CalcTextSize(text);
+            ImGui::SetCursorPosX((ImGui::GetWindowWidth() - textSize.x) * 0.5f);
+            ImGui::Text("%s", text);
+
+            ImGui::Spacing(); ImGui::Spacing();
+            ImGui::Separator();
+
+            ImGui::Dummy(ImVec2(0.0f, 25.0f));
+            ImGui::Spacing(); ImGui::Spacing();
+
+            // Center the buttons
+            float buttonWidth = 120.0f;
+            float spacing = 40.0f;
+            float totalWidth = buttonWidth * 2 + spacing;
+            float startX = (ImGui::GetWindowWidth() - totalWidth) * 0.5f;
+
+            ImGui::SetCursorPosX(startX);
+            if (ImGui::Button("Yes", ImVec2(buttonWidth, 50))) {
+                glfwSetWindowShouldClose(window, GLFW_TRUE);
+                LOG(INFO) << "User confirmed application exit";
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::SameLine(0.0f, spacing);
+            if (ImGui::Button("No", ImVec2(buttonWidth, 50))) {
+                ImGui::CloseCurrentPopup();
+                LOG(INFO) << "User canceled application exit";
+            }
+
+            ImGui::EndPopup();
+        }
+
+        ImGui::PopStyleVar();
         ImGui::End();
 
         if (selectedRendererIndex == 0 && selectedRenderer != 0) {
